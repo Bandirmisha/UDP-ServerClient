@@ -32,7 +32,7 @@ int main()
     
     while (true)
     {
-        std::cout << "\nВыберете команду: \n";
+        std::cout << "\nВыберите команду: \n";
         std::cout << "1) Узнать IP для доменного имени \n";
         std::cout << "2) Выход \n";
         std::cout << "Ваш выбор: ";
