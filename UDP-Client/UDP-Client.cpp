@@ -20,56 +20,27 @@ int main()
     addr.sin_port = htons(49001);
     addr.sin_family = AF_INET;
 
-    SOCKET Connection = socket(AF_INET, SOCK_STREAM, NULL);
-    if (connect(Connection, (SOCKADDR*)&addr, sizeof(addr)) != 0) {
-        std::cout << "Ошибка подключения к серверу\n";
-        return 1;
-    }
+    SOCKET Connection = socket(AF_INET, SOCK_DGRAM, NULL);
 
-    char response[256];
-    recv(Connection, response, sizeof(response), NULL);
-    std::cout << response << std::endl;
-    
+    int clientInput;
     while (true)
     {
-        std::cout << "\nВыберите команду: \n";
-        std::cout << "1) Узнать IP для доменного имени \n";
-        std::cout << "2) Выход \n";
-        std::cout << "Ваш выбор: ";
+        char request[256];
+        std::cout << "\nВведите доменное имя: ";
+        std::cin >> request;
 
-        int clientInput;
-        std::cin >> clientInput;
+        int len = sizeof(addr);
 
-        switch (clientInput)
-        {
-            case 1:
-            {
-                char request[256];
-                std::cout << "\nВведите доменное имя: ";
-                std::cin >> request;
+        sendto(Connection, request, sizeof(request), NULL,
+            (struct sockaddr*)&addr, len);
 
-                send(Connection, request, sizeof(request), NULL);
+        char response[256];
+        memset(response, 0, 255);
+        recv(Connection, response, 255, NULL);
 
-                memset(response, 0, 255);
-                recv(Connection, response, 255, NULL);
-                std::cout << "Полученный IP от сервера: " << response << std::endl;
+        std::cout << "Полученный IP от сервера: " << response << std::endl;
 
-                system("pause");
-                system("CLS");
-                break;
-            }
-            case 2: 
-            {
-                shutdown(Connection, 0);
-                closesocket(Connection);
-                return 0;
-            }   
-            default: 
-            {
-                std::cout << "\nКоманда не распознана! ";
-                break;
-            }
-        }
+        system("pause");
+        system("CLS");
     }
-
 }

@@ -2,6 +2,9 @@
 #include <winsock2.h>
 #include <iostream>
 #include <string>
+#include <stdlib.h> 
+#include <string.h> 
+#include <sys/types.h> 
 
 #pragma comment(lib, "ws2_32.lib")
 #pragma warning(disable: 4996)
@@ -30,47 +33,32 @@ int main()
     addr.sin_family = AF_INET;
     int addrlenght = sizeof(addr);
 
-    SOCKET sListen = socket(AF_INET, SOCK_STREAM, NULL);
+    SOCKET sListen = socket(AF_INET, SOCK_DGRAM, NULL);
     bind(sListen, (SOCKADDR*)&addr, sizeof(addr));
-    listen(sListen, SOMAXCONN);
+    //listen(sListen, SOMAXCONN);
 
     while (true)
     {
-        std::cout << "Жду присоединения клиента\n";
+        std::cout << "Жду запроса от клиента\n";
 
-        SOCKET clientConnection = accept(sListen, (SOCKADDR*)&addr, &addrlenght);
+        SOCKADDR_IN cliaddr;
+        int len = sizeof(cliaddr);
 
-        if (clientConnection != 0)
-        {
-            std::cout << "Клиент подключен!\n";
+        char request[1024];
+        recvfrom(sListen, request, sizeof(request), NULL,(struct sockaddr*)&cliaddr,&len);
 
-            char message[256] = "Вы успешно подключились!";
-            send(clientConnection, message, sizeof(message), NULL);
+        std::cout << "Поступил запрос: " << request << std::endl;
 
-            //Ждем и обрабатываем запрос от клиента
-            while (true)
-            {
-                char request[256];
-                recv(clientConnection, request, sizeof(request), NULL);
+        char* response;
+        response = GetIP(request);
 
-                if (strlen(request) == 0) //Вот это не получилось
-                {
-                    std::cout << "Клиент отключился!" << request << std::endl;
-                    closesocket(clientConnection);
-                    break;
-                }
+        std::cout << "Отправляю ответ: " << response << std::endl;
 
-                std::cout << "Поступил запрос: " << request << std::endl;
+        sendto(sListen, response, 255,
+            NULL, (const struct sockaddr*)&cliaddr,
+            len);
 
-                char* response;
-                response = GetIP(request);
-
-                std::cout << "Отправляю ответ: " << response << std::endl;
-                send(clientConnection, response, 255, NULL);
-
-                std::cout << std::endl;
-            }
-        }
+        std::cout << std::endl;
     }
 }
 
